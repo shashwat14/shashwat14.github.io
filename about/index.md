@@ -1,37 +1,11 @@
 ---
 layout: page
-title: About the Theme
-tags: [about, Jekyll, theme, moon]
+title: About me
+tags: [about]
 date: 2016-03-21
 comments: false
 ---
-    
-<center><a href="http://taylantatli.github.io/Moon"><b>Moon</b></a> is a minimal, one column jekyll theme.</center>
 
-## Features
-* Minimal, you can focus on your content
-* Responsive
-* Disqus integration
-* Syntax highlighting
-* Optional post image
-* Social icons
-* Page for sharing projects
-* Optional background image
-* Simple navigation menu
-* MathJax support
+I am a master’s student at Columbia University specializing in Machine Learning. My research interests lie at the intersection of machine learning and computer vision. I have more than 3 year’s of experience in solving problems in self-driving cars, warehouse robotics, and computer vision. Right before starting my graduate course at Columbia, I was an Applied Scientist Intern at Amazon Robotics AI where I developed computer vision based algorithms for grasping. Prior to this, I worked as a software engineer at Singapore-MIT Alliance for Research and Technology – Future Urban Mobility (SMART-FM) where I developed perception technology for self-driving vehicles.
 
-## Preview
-
-{% capture images %}
-    https://cloud.githubusercontent.com/assets/754514/14509720/61c61058-01d6-11e6-93ab-0918515ecd56.png
-    https://cloud.githubusercontent.com/assets/754514/14509716/61ac6c8e-01d6-11e6-879f-8308883de790.png
-{% endcapture %}
-{% include gallery images=images caption="Screenshots of Moon Theme" cols=2 %}
-
-See a [live version of Moon](http://taylantatli.github.io/Moon) hosted on GitHub.
-
-## Getting Started
-
-To learn how to install and use this theme check out the [Setup Guide](http://taylantatli.me/Moon/moon-theme/) for more information.
-      
-[Install Moon](https://github.com/TaylanTatli/Moon){: .btn}
+I am fortunate to have worked with some fantastic mentors and advisors over the past few years: Prof. Peter Allen (Columbia University), Dr. Sebastian Hoefer (Amazon Robotics AI), Prof. Daniela Rus (MIT), Dr. Eng You Hong (Nutonomy/Aptiv), and Prof. Marcelo Ang (NUS)
