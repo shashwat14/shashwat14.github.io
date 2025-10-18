@@ -1,0 +1,46 @@
+baseURL = "https://shashwat14.github.io/"
+languageCode = "en-us"
+title = "Shashwat Verma"
+theme = "PaperMod"
+enableRobotsTXT = true
+[pagination]
+  pagerSize = 10
+[permalinks]
+  posts = "/posts/:slug/"
+[menu]
+  [[menu.main]]
+  name = "Posts"
+  url = "/"
+  weight = 10
+  [[menu.main]]
+  name = "Archive"
+  url = "/archives/"
+  weight = 20
+  [[menu.main]]
+  name = "Search"
+  url = "/search/"
+  weight = 30
+  [[menu.main]]
+  name = "FAQ"
+  url = "/faq/"
+  weight = 40
+[params]
+  description = "Notes and essays by Shashwat Verma"
+  author = "Shashwat Verma"
+  defaultTheme = "auto"
+  ShowReadingTime = true
+  ShowToc = true
+  dateFormat = "Jan 2, 2006"
+  images = ["images/og-default.png"]
+[params.search]
+  enabled = true
+[markup]
+  [markup.tableOfContents]
+    startLevel = 2
+    endLevel = 3
+  [markup.goldmark.renderer]
+    unsafe = true
+[sitemap]
+  changefreq = "weekly"
+  filename = "sitemap.xml"
+  priority = 0.5
