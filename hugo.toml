@@ -16,6 +16,10 @@ enableRobotsTXT = true
   name = "Archive"
   url = "/archives/"
   weight = 20
+  [[menu.main]]
+  name = "About"
+  url = "/about/"
+  weight = 30
 [params]
   description = "Notes and essays by Shashwat Verma"
   author = "Shashwat Verma"

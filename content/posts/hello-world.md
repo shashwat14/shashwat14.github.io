@@ -1,6 +1,6 @@
 ---
 title: "Hello World"
-date: 2025-10-18
+date: 2025-10-17
 draft: false
 summary: "A short intro to the blog."
 ShowToc: true
