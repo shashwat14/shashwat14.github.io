@@ -7,30 +7,12 @@ ShowToc: false
 
 ## Hi, I'm Shashwat 👋
 
-I'm a [your profession/role here] passionate about [your interests].
+I'm an Applied Scientist at Amazon, working on generative AI, mostly LLMs and VLMs. Over the years, I've gotten my hands dirty across the full stack: pretraining, post-training, and optimization.
 
-### What I Do
+### Why This Blog?
 
-Write about your work, research, or areas of expertise here.
+Honestly, I think of myself as a dummy who's constantly learning new things. This blog is my way of capturing that process, writing things down as I figure them out, with all the details I wish I had when I started. I hope you find it useful too!
 
-### Interests
+### Say Hi
 
-- Machine Learning & AI
-- Neural Network Optimization
-- [Add your interests]
-
-### Background
-
-Share your educational background, work experience, or other relevant information.
-
-### Contact
-
-Feel free to reach out:
-- Email: [your-email@example.com]
-- GitHub: [your-github]
-- LinkedIn: [your-linkedin]
-- Twitter/X: [your-handle]
-
----
-
-*This site is built with Hugo and the PaperMod theme, deployed on GitHub Pages.*
+You can find me on [Twitter/X](https://twitter.com/therumsticks), [LinkedIn](https://linkedin.com/in/verma-s), or [GitHub](https://github.com/shashwat14).
