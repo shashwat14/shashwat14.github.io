@@ -49,7 +49,9 @@ for each parameter tensor θ:
     θ = θ - lr * adam_update
 ```
 
-The variable `m` here is called the **first moment** or **momentum**. It's an exponential moving average of past gradients. Instead of updating weights with just the current gradient (like vanilla SGD), we use this smoothed accumulation. When we talk about "orthogonalizing the momentum" later, we mean orthogonalizing this accumulated gradient matrix `m`. Interestingly, Muon doesn't need the second moment `v` at all. Orthogonalizing the momentum is sufficient to get good updates, making the optimizer simpler.
+The variable `m` here is called the **first moment** or **momentum**. It's an exponential moving average of past gradients. Instead of updating weights with just the current gradient (like vanilla SGD), we use this smoothed accumulation.
+
+Note: Muon uses a different momentum formulation. Instead of Adam's EMA-style first moment ($m = \beta_1 m + (1 - \beta_1) g$), Muon uses SGD-style momentum ($m = \beta m + g$), similar to classical momentum or Nesterov. It then orthogonalizes this accumulated gradient matrix. Muon doesn't need the second moment `v` at all. Orthogonalizing the momentum is sufficient to get good updates, making the optimizer simpler.
 
 We won't do a deep dive on AdamW itself, but the key takeaway is that all the math here is **elementwise**. In other words, we don't really treat the parameters as matrices. We treat them as a list. Every operation (addition, multiplication, square, square root) is done element by element. This will be important later.
 
