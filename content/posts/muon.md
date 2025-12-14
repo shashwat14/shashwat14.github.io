@@ -81,7 +81,7 @@ $$y = xW^\top$$
 During backpropagation, the gradient with respect to the weights is computed as:
 $$\frac{\partial L}{\partial W} = \left(\frac{\partial L}{\partial y}\right)^T x \in \mathbb{R}^{d_{out} \times d_{model}}$$
 
-Here, $\frac{\partial L}{\partial y} \in \mathbb{R}^{T \times d_{out}}$ is the gradient flowing from the upper layers, and $x \in \mathbb{R}^{T \times d_{model}}$ is the input to this layer. If either of these matrices has a high condition number, their product (the weight gradient) will also tend to have a high condition number. So either the input activations $x$ or the upstream gradients $\frac{\partial L}{\partial y}$ (or both) are ill-conditioned, leading to an ill-conditioned weight gradient.
+Here, $\frac{\partial L}{\partial y} \in \mathbb{R}^{T \times d_{out}}$ is the gradient flowing from deeper layers, and $x \in \mathbb{R}^{T \times d_{model}}$ is the input to this layer. If either of these matrices has a high condition number, their product (the weight gradient) will also tend to have a high condition number. So either the input activations $x$ or the upstream gradients $\frac{\partial L}{\partial y}$ (or both) are ill-conditioned, leading to an ill-conditioned weight gradient.
 
 Empirically, this is what we observe: the gradients are ill-conditioned. I haven't fully figured out *why* the activations or upstream gradients are ill-conditioned in the first place, but it's a consistent pattern in practice. There might be some connection to inputs being low-rank because all tokens in the sequence are correlated, but that's just speculation.
 
