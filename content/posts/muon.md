@@ -99,7 +99,7 @@ The whole Muon optimizer is about making this transform (the momentum matrix) or
 
 ## SVD is Too Slow
 
-The simplest approach to orthogonalization is via SVD. However, SVD is quite expensive to compute on GPUs, especially for large matrices. So even though it works, it's not practical. The token efficiency gains are overshadowed by the wall-clock time increase due to SVD computation.
+The simplest approach to orthogonalization is to compute the SVD of the momentum matrix $M = U\Sigma V^\top$ and discard $\Sigma$, retaining only $UV^\top$. This gives us the orthogonalized matrix directly. However, SVD is quite expensive to compute on GPUs, especially for large matrices. So even though it works, it's not practical. The token efficiency gains are overshadowed by the wall-clock time increase due to SVD computation.
 
 This motivates us to look for cheaper alternatives and raises the question: can we compute an approximate orthogonalization that is fast to compute on GPUs?
 
