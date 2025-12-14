@@ -134,7 +134,13 @@ Now that we have built some intuition, let's see how this extends to matrices. B
 
 ### Properties of a Good Polynomial
 
-1. It must be an **odd function**. This ensures the polynomial has the right symmetry properties for the Newton-Schulz iteration to work correctly.
+1. It must be an **odd function**, meaning $p(-x) = -p(x)$. In practice, this means it only has odd powers of $x$ (like $x$, $x^3$, $x^5$). Why does this matter? Consider what happens when we try to apply powers to a matrix $G \in \mathbb{R}^{m \times n}$:
+   - $x^1$ → $G$ (shape: $m \times n$) ✓
+   - $x^2$ → $GG^\top$ (shape: $m \times m$) ✗ wrong shape!
+   - $x^3$ → $(GG^\top)G$ (shape: $m \times n$) ✓
+   - $x^5$ → $(GG^\top)^2 G$ (shape: $m \times n$) ✓
+   
+   Odd powers give us back a matrix with the same shape as $G$, so we can iterate. Even powers change the shape, breaking the iteration.
 
 2. The polynomial should have a **fixed point at $1$**. This ensures that once the input reaches this value, it remains stable.
 
