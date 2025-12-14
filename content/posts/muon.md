@@ -154,6 +154,8 @@ $$M_{k+1} = p(M_k) = U p(\Sigma_k) V^\top$$
 
 As $k$ approaches infinity, the singular values in $\Sigma_k$ converge to 1 (since singular values are always non-negative). Consequently, $M_k$ converges to an orthogonal matrix $UV^\top$.
 
+**Important**: The polynomial only converges when singular values are in $[0, 1]$. This is why we first normalize the matrix by its Frobenius norm $\|M\|_F = \sqrt{\sum_{i,j} M_{ij}^2}$. This normalization scales down all singular values proportionally, ensuring they fall within the valid range.
+
 ## Why Odd Polynomials Only Affect Singular Values
 
 Let's assume that our quintic (degree 5) polynomial is an odd polynomial that can orthogonalize a matrix $G$:
