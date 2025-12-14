@@ -51,8 +51,6 @@ for each parameter tensor θ:
 
 The variable `m` here is called the **first moment** or **momentum**. It's an exponential moving average of past gradients. Instead of updating weights with just the current gradient (like vanilla SGD), we use this smoothed accumulation.
 
-Note: Muon uses a different momentum formulation. Instead of Adam's EMA-style first moment ($m = \beta_1 m + (1 - \beta_1) g$), Muon uses SGD-style momentum ($m = \beta m + g$), similar to classical momentum or Nesterov. It then orthogonalizes this accumulated gradient matrix. Muon doesn't need the second moment `v` at all. Orthogonalizing the momentum is sufficient to get good updates, making the optimizer simpler.
-
 We won't do a deep dive on AdamW itself, but the key takeaway is that all the math here is **elementwise**. In other words, we don't really treat the parameters as matrices. We treat them as a list. Every operation (addition, multiplication, square, square root) is done element by element. This will be important later.
 
 Looking at AdamW at a high level, we have a gradient that we use to update the parameters. We first perform weight decay on the parameters themselves. Then, unlike SGD, we don't just apply the gradient as-is. We compute a few quantities like first and second moments and use them to create the update. Note that at no point did we use any matrix algebra operations. Everything is elementwise.
@@ -291,7 +289,7 @@ def newton_schulz_orthogonalize(G, num_iters=5):
 def muon_step(params, grads, momentum_buffer, lr, beta=0.95):
     for param, grad in zip(params, grads):
         if param.ndim == 2 and is_hidden_layer(param):
-            # Nesterov momentum (empirically works better than standard momentum)
+            # SGD-style momentum with Nesterov-like lookahead
             momentum_buffer[param] = beta * momentum_buffer[param] + grad
             update = beta * momentum_buffer[param] + grad
             
@@ -301,6 +299,8 @@ def muon_step(params, grads, momentum_buffer, lr, beta=0.95):
             # Use AdamW for embeddings, output head, 1D params, etc.
             adamw_step(param, grad)
 ```
+
+Note that Muon uses SGD-style momentum ($u = \beta u + g$) rather than Adam's EMA form ($m = \beta m + (1-\beta) g$). These differ only by a constant factor that gets absorbed into the learning rate, so they're mathematically equivalent.
 
 # Key Takeaways
 
