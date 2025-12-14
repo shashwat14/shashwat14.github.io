@@ -30,14 +30,14 @@ Let's start with a quick review of AdamW. It's simply the Adam optimizer + weigh
 
 ```python
 for each parameter tensor θ:
+    # Gradient g is already computed from backward pass
+    g = θ.grad
 
-    # 1. Decoupled weight decay as separate step
+    # 1. Decoupled weight decay (applied directly to weights, not gradients)
     if weight_decay > 0 and θ should_decay:
         θ = θ * (1 - lr * weight_decay)
 
-    # 2. Standard Adam update on the shrunken θ
-    g = grad(θ)
-
+    # 2. Standard Adam update
     m = beta1 * m + (1 - beta1) * g
     v = beta2 * v + (1 - beta2) * (g * g)
 
@@ -48,6 +48,8 @@ for each parameter tensor θ:
 
     θ = θ - lr * adam_update
 ```
+
+The variable `m` here is called the **first moment** or **momentum**. It's an exponential moving average of past gradients. Instead of updating weights with just the current gradient (like vanilla SGD), we use this smoothed accumulation. When we talk about "orthogonalizing the momentum" later, we mean orthogonalizing this accumulated gradient matrix `m`. Interestingly, Muon doesn't need the second moment `v` at all. Orthogonalizing the momentum is sufficient to get good updates, making the optimizer simpler.
 
 We won't do a deep dive on AdamW itself, but the key takeaway is that all the math here is **elementwise**. In other words, we don't really treat the parameters as matrices. We treat them as a list. Every operation (addition, multiplication, square, square root) is done element by element. This will be important later.
 
