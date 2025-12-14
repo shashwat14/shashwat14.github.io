@@ -286,12 +286,12 @@ def newton_schulz_orthogonalize(G, num_iters=5):
     
     return G
 
-def muon_step(params, grads, momentum_buffer, lr, beta=0.95):
+def muon_step(params, grads, buf, lr, beta=0.95):
     for param, grad in zip(params, grads):
         if param.ndim == 2 and is_hidden_layer(param):
             # SGD-style momentum with Nesterov-like lookahead
-            momentum_buffer[param] = beta * momentum_buffer[param] + grad
-            update = beta * momentum_buffer[param] + grad
+            buf[param] = beta * buf[param] + grad
+            update = beta * buf[param] + grad
             
             # Orthogonalize and apply
             param -= lr * newton_schulz_orthogonalize(update)
@@ -300,7 +300,7 @@ def muon_step(params, grads, momentum_buffer, lr, beta=0.95):
             adamw_step(param, grad)
 ```
 
-Note that Muon uses SGD-style momentum ($u = \beta u + g$) rather than Adam's EMA form ($m = \beta m + (1-\beta) g$). These differ only by a constant factor that gets absorbed into the learning rate, so they're mathematically equivalent.
+Note that Muon uses SGD-style momentum ($\text{buf} = \beta \cdot \text{buf} + g$) rather than Adam's EMA form ($m = \beta m + (1-\beta) g$). With the same $\beta$ and initialization, SGD-style accumulates to $\frac{1}{1-\beta}$ times larger values than EMA-style. This scaling difference gets absorbed into the learning rate.
 
 # Key Takeaways
 
