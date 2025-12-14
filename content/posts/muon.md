@@ -1,6 +1,6 @@
 ---
 title: "Muon Optimizer For Dummies"
-date: 2025-12-01
+date: 2025-12-13
 draft: false
 summary: "A deep dive into Muon, the optimizer that trains models 35% faster by preserving rare learning directions that AdamW misses."
 ShowToc: true
@@ -9,9 +9,9 @@ math: true
 
 # Introduction
 
-For most of us, AdamW has been good enough. But Keller Jordan questioned it, found some issues, and built Muon. It achieves a **1.35x speedup** on the NanoGPT benchmark. That means 35% fewer tokens to reach the same performance, or equivalently, reaching lower loss with the same data.
+Muon is a new optimizer that improves token efficiency by about 35% over AdamW for training GPT2-small. It was introduced by Keller Jordan et al. [[1]](#ref-1) As of today, it has been used to train models up to ~1T parameters highlighting its scalability, albeit with some changes (MuonClip [[3]](#ref-3)) to the original algorithm.
 
-The name stands for **M**oment**U**m **O**rthogonalized by **N**ewton-Schulz. Muon orthogonalizes the momentum (accumulated gradients) using Newton-Schulz iteration. It is only applicable for **hidden layer** 2D weight matrices. Embedding layers and the output classifier head should still use AdamW.
+The name stands for **M**oment**U**m **O**rthogonalized by **N**ewton-Schulz. 
 
 Here's what we'll cover:
 1. The problem with AdamW
@@ -49,11 +49,9 @@ for each parameter tensor θ:
     θ = θ - lr * adam_update
 ```
 
-We are not going to jump into the intuition behind AdamW, but the key takeaway is that all the math here is **elementwise**. 
+We won't do a deep dive on AdamW itself, but the key takeaway is that all the math here is **elementwise**. In other words, we don't really treat the parameters as matrices. We treat them as a list. Every operation (addition, multiplication, square, square root) is done element by element. This will be important later.
 
-An interesting thing about deep learning is that there is quite a bit of matrix algebra used in both the forward pass and backward pass. For example, we say $y = xW^\top$. Similarly, in the backward pass, we compute $\frac{\partial L}{\partial W}$.
-
-Looking at AdamW at a high level, we have a gradient that we use to update the matrix. We first perform weight decay. Now unlike SGD, we don't just apply this gradient as-is. We compute a few quantities like first and second moments and then use them to create the update. Note that at no point did we use any matrix algebra operations. Everything is elementwise.
+Looking at AdamW at a high level, we have a gradient that we use to update the parameters. We first perform weight decay on the parameters themselves. Then, unlike SGD, we don't just apply the gradient as-is. We compute a few quantities like first and second moments and use them to create the update. Note that at no point did we use any matrix algebra operations. Everything is elementwise.
 
 This raises a question: why even bother? Why do we need to use matrix operations, and why are elementwise operations not enough?
 
@@ -83,11 +81,13 @@ $$\frac{\partial L}{\partial W} = \left(\frac{\partial L}{\partial y}\right)^T x
 
 Here, $\frac{\partial L}{\partial y} \in \mathbb{R}^{T \times d_{out}}$ is the gradient flowing from the upper layers, and $x \in \mathbb{R}^{T \times d_{model}}$ is the input to this layer. If either of these matrices has a high condition number, their product (the weight gradient) will also tend to have a high condition number. So either the input activations $x$ or the upstream gradients $\frac{\partial L}{\partial y}$ (or both) are ill-conditioned, leading to an ill-conditioned weight gradient.
 
+Empirically, this is what we observe: the gradients are ill-conditioned. I haven't fully figured out *why* the activations or upstream gradients are ill-conditioned in the first place, but it's a consistent pattern in practice. There might be some connection to inputs being low-rank because all tokens in the sequence are correlated, but that's just speculation.
+
 # The Fix: Orthogonalize the Momentum
 
 We can think of matrices as transforms that rotate and scale space. A high condition number means the scaling is very uneven; some directions get stretched a lot, others barely at all. 
 
-Muon's fix: **orthogonalize the momentum matrix**. This replaces all singular values with 1, keeping only the rotation part ($UV^\top$ from the SVD). This effectively rescues those rare but important directions.
+Muon's fix: **orthogonalize the momentum matrix**. This replaces all singular values with 1, keeping only the rotation part ($UV^\top$ from the SVD). This effectively preserves those rare but important directions.
 
 Remember, we are talking about the **momentum matrix** as a transformation, not the weight matrix itself.
 
@@ -97,7 +97,7 @@ The whole Muon optimizer is about making this transform (the momentum matrix) or
 
 ## SVD is Too Slow
 
-The simplest approach to orthogonalization is via SVD. And in fact, this is what Keller Jordan et al. did in their initial experiments. However, SVD is quite expensive to compute on GPUs, especially for large matrices. So even though it works, it's not practical. The token efficiency gains are overshadowed by the wall-clock time increase due to SVD computation.
+The simplest approach to orthogonalization is via SVD. However, SVD is quite expensive to compute on GPUs, especially for large matrices. So even though it works, it's not practical. The token efficiency gains are overshadowed by the wall-clock time increase due to SVD computation.
 
 This motivates us to look for cheaper alternatives and raises the question: can we compute an approximate orthogonalization that is fast to compute on GPUs?
 
@@ -230,7 +230,7 @@ $$f(x) = 3.4445x - 4.7750x^3 + 2.0315x^5$$
 
 ## Why Not Use The Simple Cubic?
 
-1. **Cubic polynomial requires more iterations to converge**, leading to higher computational cost. This means more GPU time per optimization step — negating some of the speedup benefits of Muon.
+1. **Cubic polynomial requires more iterations to converge**, leading to higher computational cost. This means more GPU time per optimization step, negating some of the speedup benefits of Muon.
 
 2. **The "cursed" quintic polynomial pushes singular values toward 1 more aggressively**, leading to a better tradeoff between speed and convergence quality. Empirically, this is good enough for training models.
 
@@ -240,10 +240,9 @@ $$f(x) = 3.4445x - 4.7750x^3 + 2.0315x^5$$
 
 Muon is only applied to **2D weight matrices in hidden layers** (e.g., attention projections, MLP layers). Everything else uses AdamW:
 
-- **Embedding layers** — Use AdamW (different optimization dynamics per modular norm theory)
-- **Language model head (output projection)** — Use AdamW (empirically performs better)
-- **LayerNorm/RMSNorm scale and shift parameters** — Use AdamW (these are 1D vectors, not 2D matrices)
-- **Biases** — Use AdamW (1D vectors)
+- **Embedding layer and LM Head**: Use AdamW (empirically performs better)
+- **LayerNorm/RMSNorm scale and shift parameters**: Use AdamW (these are 1D vectors, not 2D matrices)
+- **Biases**: Use AdamW (1D vectors)
 
 For transformers specifically, Muon should be applied to Q, K, V projection weights separately rather than as a combined fused QKV matrix.
 
@@ -293,12 +292,23 @@ def muon_step(params, grads, momentum_buffer, lr, beta=0.95):
 
 # Key Takeaways
 
-1. **AdamW updates are elementwise** — they ignore the matrix structure of weight gradients, leading to updates dominated by a few directions.
+1. **AdamW updates are elementwise**: they ignore the matrix structure of weight gradients, leading to updates dominated by a few directions.
 
-2. **Muon orthogonalizes the momentum** — by replacing the momentum matrix with its nearest orthogonal matrix ($UV^\top$), it rescues rare but important learning directions.
+2. **Muon orthogonalizes the momentum**: by replacing the momentum matrix with its nearest orthogonal matrix ($UV^\top$), it uses rare but important learning directions.
 
-3. **Newton-Schulz iteration is the key trick** — it approximates orthogonalization using only matrix multiplications, which are fast on GPUs. The "cursed" quintic polynomial converges in just 5 iterations.
+3. **Newton-Schulz iteration is the key trick**: it approximates orthogonalization using only matrix multiplications, which are fast on GPUs. The "cursed" quintic polynomial converges in just 5 iterations.
 
-4. **Muon only applies to hidden layer 2D weights** — embeddings, output heads, and 1D parameters still use AdamW.
+4. **Muon only applies to hidden layer 2D weights**: embeddings, output heads, and 1D parameters still use AdamW.
 
 For the original writeup and implementation, see [Keller Jordan's blog post](https://kellerjordan.github.io/posts/muon/) and the [Muon GitHub repo](https://github.com/KellerJordan/Muon).
+
+# References
+
+<a id="ref-1"></a>
+[1] Keller Jordan. *Muon: An optimizer for hidden layers in neural networks.* Blog post. [https://kellerjordan.github.io/posts/muon/](https://kellerjordan.github.io/posts/muon/)
+
+<a id="ref-2"></a>
+[2] Keller Jordan. *Muon GitHub Repository.* [https://github.com/KellerJordan/Muon](https://github.com/KellerJordan/Muon)
+
+<a id="ref-3"></a>
+[3] Kimi Team. *Kimi K2: Open Agentic Intelligence.* arXiv:2507.20534, 2025. Introduces MuonClip, which improves upon Muon with a QK-clip technique for training stability at scale. [https://arxiv.org/abs/2507.20534](https://arxiv.org/abs/2507.20534)
